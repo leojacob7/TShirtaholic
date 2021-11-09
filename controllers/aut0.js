@@ -69,19 +69,3 @@ exports.isAuthenticated = (req, res, next) => {
 	}
 	next();
 };
-
-exports.isAdmin = (req, res, next) => {
-	if (
-		!(
-			req.auth &&
-			req.profile &&
-			req.profile._id == req.auth.id &&
-			req.profile.role === 1
-		)
-	) {
-		return res.status(400).send({ message: 'Not an admin user' });
-	}
-	next();
-
-	// next();
-};
