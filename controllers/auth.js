@@ -22,7 +22,7 @@ exports.signUp = (req, res) => {
 				error: `${err}`,
 			});
 		}
-		res.json(userData);
+		return res.json(userData);
 	});
 };
 

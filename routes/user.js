@@ -12,7 +12,7 @@ const { body } = require('express-validator');
 
 router.param('userId', getUserById);
 
-router.get('/user/:userId', isSignedIn, isAuthenticated, isAdmin, getUser);
+router.get('/user/:userId', isSignedIn, isAuthenticated, getUser);
 router.put('/user/:userId', isSignedIn, isAuthenticated, updateUsers);
 
 // get the order details with the user data populated
