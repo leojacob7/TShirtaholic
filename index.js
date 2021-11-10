@@ -26,18 +26,6 @@ mongoose
 	})
 	.catch((err) => console.log('⚠️ ⛔️ OOPS an error occured', err));
 
-const login = true;
-const isLoggedIn = (req, res, next) => {
-	console.log('login :>> ', login);
-	if (login) {
-		console.log('Yes Logged in');
-		next();
-	} else {
-		console.log('No not logged in');
-		res.json('Cant redirect to login page');
-	}
-};
-
 app.use(express.json());
 app.use(cors({ origin: '*' }));
 app.use(cookieParser());
