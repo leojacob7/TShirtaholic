@@ -28,6 +28,11 @@ exports.signUp = (req, res) => {
 
 exports.signIn = async (req, res) => {
 	const { email, password } = req.body;
+	if (!email || !password) {
+		return res
+			.status(400)
+			.send({ error: 'Please enter a valid email and password' });
+	}
 	const user = await User.findOne({
 		email: email,
 	});
@@ -35,7 +40,11 @@ exports.signIn = async (req, res) => {
 	let isCorrectUser = await user.authenticatePassword(password);
 	if (isCorrectUser) {
 		const token = jwt.sign({ id: user._id }, process.env.SECRET);
-		res.cookie('token', token, { httpOnly: true });
+		res.cookie('token', token, {
+			expires: new Date(Date.now() + 900000),
+			httpOnly: true,
+			secure: true,
+		});
 		res.json({
 			message: 'User has been successfully logged in',
 			body: {
