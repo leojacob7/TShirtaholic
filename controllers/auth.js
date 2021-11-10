@@ -53,6 +53,7 @@ exports.signIn = async (req, res) => {
 					id: user._id,
 					email: user.email,
 					role: user.role,
+					name: user.name,
 				},
 			},
 		});
@@ -66,11 +67,51 @@ exports.signOut = (req, res) => {
 	res.json({ message: 'User signOut' });
 };
 
-exports.isSignedIn = expressJwt({
-	secret: 'convolutedsecre',
-	algorithms: ['HS256'],
-	requestProperty: 'auth',
-});
+// exports.isSignedIn = expressJwt({
+// 	secret: 'convolutedsecre',
+// 	algorithms: ['HS256'],
+// 	requestProperty: 'auth',
+// });
+
+// old method above we were using expressJwt
+// this was to create a signed in token to validate
+// now we will directly use jwt.verify to validate it
+exports.isSignedIn = async (req, res, next) => {
+	const bearerToken = req.headers.authorization?.split(' ')[1];
+	console.log('req.cookie :>> ', req.cookies);
+	console.log('req.cookie :>> ', bearerToken);
+	const token = req.cookies.token || bearerToken;
+	console.log('token :>> ', token);
+
+	if (!token) {
+		return res.status(403).json({
+			message: 'User has not logged in ',
+			isLoggedIn: false,
+			isValidToken: false,
+		});
+	} else {
+		try {
+			const data = await jwt.verify(token, 'convolutedsecre');
+			console.log('verifying token', data);
+			if (!jwt.verify(token, process.env.SECRET)) {
+				console.log('token is invalid');
+				throw {
+					message: 'Invalid token',
+					isLoggedIn: false,
+					isValidToken: false,
+				};
+			} else {
+				console.log('here after verify jwt');
+				const data = jwt.verify(token, process.env.SECRET);
+				// set auth to be data.id
+				req.auth = { id: data.id };
+				next();
+			}
+		} catch (er) {
+			return res.status(500).send(er);
+		}
+	}
+};
 
 exports.isAuthenticated = (req, res, next) => {
 	if (!(req.auth && req.profile && req.profile._id == req.auth.id)) {
@@ -93,4 +134,51 @@ exports.isAdmin = (req, res, next) => {
 	next();
 
 	// next();
+};
+
+exports.getAuthToken = async (req, res) => {
+	const bearerToken = req.headers.authorization?.split(' ')[1];
+	// console.log('req.cookie :>> ', req.cookies);
+	// console.log('req.cookie :>> ', bearerToken);
+	const token = req.cookies.token || bearerToken;
+	// console.log('token :>> ', token);
+	if (!token) {
+		return res.status(403).json({
+			message: 'User has not logged in ',
+			isLoggedIn: false,
+			isValidToken: false,
+		});
+	} else {
+		try {
+			const data = await jwt.verify(token, 'convolutedsecre');
+			console.log('verifying token', data);
+			if (!jwt.verify(token, process.env.SECRET)) {
+				console.log('token is invalid');
+				throw {
+					message: 'Invalid token',
+					isLoggedIn: false,
+					isValidToken: false,
+				};
+			} else {
+				console.log('here after verify jwt');
+				const data = jwt.verify(token, process.env.SECRET);
+				User.findById(data.id)
+					.select({
+						salt: 0,
+						privatePassword: 0,
+						createdAt: 0,
+						updatedAt: 0,
+					})
+					.exec(function (err, user) {
+						if (err || !user) {
+							return res.json({ message: 'No such user' });
+						}
+						req.profile = user;
+						return res.json({ token, user });
+					});
+			}
+		} catch (er) {
+			return res.status(500).send(er);
+		}
+	}
 };

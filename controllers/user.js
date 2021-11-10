@@ -60,7 +60,7 @@ const getUser = (req, res) => {
 
 const getOrdersPerUser = (req, res) => {
 	Order.find({ user: req.profile._id })
-		.populate('user', '_id email')
+		.populate('user', '_id email name')
 		.exec((error, order) => {
 			if (error) {
 				return res.status(404).send('No such user');
